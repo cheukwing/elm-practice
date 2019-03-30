@@ -23,12 +23,13 @@ type alias Model =
     { name : String
     , password : String
     , passwordAgain : String
+    , age : String
     }
 
 
 init : Model
 init =
-    Model "" "" ""
+    Model "" "" "" ""
 
 
 
@@ -39,6 +40,7 @@ type Msg
     = Name String
     | Password String
     | PasswordAgain String
+    | Age String
 
 
 update : Msg -> Model -> Model
@@ -53,6 +55,9 @@ update msg model =
         PasswordAgain password ->
             { model | passwordAgain = password }
 
+        Age age ->
+            { model | age = age }
+
 
 
 -- VIEW
@@ -64,6 +69,7 @@ view model =
         [ viewInput "text" "Name" model.name Name
         , viewInput "password" "Password" model.password Password
         , viewInput "password" "Re-enter Password" model.passwordAgain PasswordAgain
+        , viewInput "text" "Age" model.age Age
         , viewValidation model
         ]
 
@@ -80,7 +86,7 @@ type alias Validation =
 
 
 viewValidation : Model -> Html msg
-viewValidation { password, passwordAgain } =
+viewValidation { password, passwordAgain, age } =
     let
         validations =
             [ Validation (String.length password > 8) "Password must be longer than 8 characters!"
@@ -88,12 +94,13 @@ viewValidation { password, passwordAgain } =
             , Validation (String.any isLower password) "Password must contain lower case character!"
             , Validation (String.any isDigit password) "Password must contain numeric character!"
             , Validation (password == passwordAgain) "Passwords do not match!"
+            , Validation (String.all isDigit age) "Age is not a number!"
             ]
 
-        invalids =
-            validations |> List.filter (.valid >> not) |> List.map .errorMsg
+        invalid =
+            validations |> List.filter (.valid >> not) |> List.map .errorMsg |> List.head
     in
-    case List.head invalids of
+    case invalid of
         Just errorMsg ->
             div [ style "color" "red" ] [ text errorMsg ]
 
