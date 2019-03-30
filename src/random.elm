@@ -26,13 +26,14 @@ main =
 
 
 type alias Model =
-    { dieFace : Int
+    { dieFace1 : Int
+    , dieFace2 : Int
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model 1
+    ( Model 1 1
     , Cmd.none
     )
 
@@ -43,7 +44,13 @@ init _ =
 
 type Msg
     = Roll
-    | NewFace Int
+    | NewFaces Faces
+
+
+type alias Faces =
+    { dieFace1 : Int
+    , dieFace2 : Int
+    }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -51,13 +58,23 @@ update msg model =
     case msg of
         Roll ->
             ( model
-            , Random.generate NewFace (Random.int 1 6)
+            , Random.generate NewFaces rollBoth
             )
 
-        NewFace newFace ->
-            ( Model newFace
+        NewFaces { dieFace1, dieFace2 } ->
+            ( Model dieFace1 dieFace2
             , Cmd.none
             )
+
+
+rollBoth : Random.Generator Faces
+rollBoth =
+    Random.map2 Faces roll roll
+
+
+roll : Random.Generator Int
+roll =
+    Random.int 1 6
 
 
 
@@ -76,7 +93,8 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
     div []
-        [ diceView model.dieFace
+        [ diceView model.dieFace1
+        , diceView model.dieFace2
         , button [ onClick Roll ] [ text "Roll" ]
         ]
 
