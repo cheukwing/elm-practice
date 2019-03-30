@@ -4,7 +4,7 @@ import Browser
 import Char exposing (isDigit, isLower, isUpper)
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onInput)
+import Html.Events exposing (onClick, onInput)
 
 
 
@@ -19,17 +19,24 @@ main =
 -- MODEL
 
 
+type Valid
+    = Initial
+    | Ok
+    | Error String
+
+
 type alias Model =
     { name : String
     , password : String
     , passwordAgain : String
     , age : String
+    , valid : Valid
     }
 
 
 init : Model
 init =
-    Model "" "" "" ""
+    Model "" "" "" "" Initial
 
 
 
@@ -41,6 +48,7 @@ type Msg
     | Password String
     | PasswordAgain String
     | Age String
+    | Submit
 
 
 update : Msg -> Model -> Model
@@ -58,6 +66,9 @@ update msg model =
         Age age ->
             { model | age = age }
 
+        Submit ->
+            { model | valid = viewValidation model }
+
 
 
 -- VIEW
@@ -70,7 +81,8 @@ view model =
         , viewInput "password" "Password" model.password Password
         , viewInput "password" "Re-enter Password" model.passwordAgain PasswordAgain
         , viewInput "text" "Age" model.age Age
-        , viewValidation model
+        , button [ onClick Submit ] [ text "Submit " ]
+        , validationStatus model.valid
         ]
 
 
@@ -79,13 +91,30 @@ viewInput t p v toMsg =
     input [ type_ t, placeholder p, value v, onInput toMsg ] []
 
 
+validationStatus : Valid -> Html msg
+validationStatus valid =
+    let
+        ( color, txt ) =
+            case valid of
+                Initial ->
+                    ( "black", "" )
+
+                Ok ->
+                    ( "green", "OK" )
+
+                Error msg ->
+                    ( "red", msg )
+    in
+    div [ style "color" color ] [ text txt ]
+
+
 type alias Validation =
     { valid : Bool
     , errorMsg : String
     }
 
 
-viewValidation : Model -> Html msg
+viewValidation : Model -> Valid
 viewValidation { password, passwordAgain, age } =
     let
         validations =
@@ -102,7 +131,7 @@ viewValidation { password, passwordAgain, age } =
     in
     case invalid of
         Just errorMsg ->
-            div [ style "color" "red" ] [ text errorMsg ]
+            Error errorMsg
 
         Nothing ->
-            div [ style "color" "green" ] [ text "OK" ]
+            Ok
